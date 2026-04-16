@@ -1,0 +1,11 @@
+flask==2.3.0
+flask-cors==4.0.0
+mysql-connector-python==8.0.33
+torch==2.0.0
+transformers==4.35.0
+pillow==9.5.0
+python-dotenv==1.0.0
+pyjwt==2.8.0
+werkzeug==2.3.0
+open-clip-torch==2.24.0
+ultralytics==8.0.225opencv-python==4.8.1.78

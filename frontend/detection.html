@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Object Detection - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .detection-page-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .detection-page-header {
+      text-align: center;
+      margin-bottom: 50px;
+      animation: slideInDown 0.8s ease-out;
+    }
+
+    .detection-page-header h1 {
+      font-size: 48px;
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 15px;
+      font-weight: 800;
+    }
+
+    .detection-page-header p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    .detection-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .detection-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .camera-section {
+      background: var(--white-bg);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--shadow-xl);
+      animation: slideInLeft 0.8s ease-out;
+    }
+
+    .camera-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      font-size: 24px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .camera-header i {
+      background: linear-gradient(135deg, #7c3aed, #db2777);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 28px;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .camera-controls button {
+      padding: 12px 28px;
+      font-size: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #startCameraBtn {
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(123, 58, 237, 0.4);
+      display: block !important;
+    }
+
+    #startCameraBtn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(123, 58, 237, 0.6);
+    }
+
+    #startCameraBtn:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    #stopCameraBtn {
+      background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%);
+      color: white;
+      display: none;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+
+    #stopCameraBtn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6);
+    }
+
+    #stopCameraBtn:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .camera-controls button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      background: #1e1b4b;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+      aspect-ratio: 4 / 3;
+    }
+
+    #liveVideo {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+      object-fit: cover;
+    }
+
+    #liveCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* Fullscreen Mode */
+    .video-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      aspect-ratio: unset;
+      z-index: 10000;
+    }
+
+    .camera-section.fullscreen-active {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      padding: 0;
+      border-radius: 0;
+      z-index: 9999;
+      background: #000;
+    }
+
+    .camera-controls.fullscreen-active {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10001;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .detection-grid.fullscreen-active {
+      display: none;
+    }
+
+    .detection-status {
+      text-align: center;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(123, 58, 237, 0.1) 0%, rgba(8, 145, 178, 0.1) 100%);
+      border-radius: 12px;
+      color: var(--primary-color);
+      font-weight: 600;
+      border-left: 4px solid var(--primary-color);
+      font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+
+    .detected-objects-panel {
+      background: var(--white-bg);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: var(--shadow-xl);
+      height: fit-content;
+      animation: slideInRight 0.8s ease-out;
+    }
+
+    .detected-objects-panel h3 {
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 15px;
+    }
+
+    #objectList {
+      list-style: none;
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #objectList li,
+    #objectList p {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(123, 58, 237, 0.08) 0%, rgba(219, 39, 119, 0.08) 100%);
+      border-left: 4px solid var(--primary-light);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    #objectList li:hover {
+      transform: translateX(5px);
+      background: linear-gradient(135deg, rgba(123, 58, 237, 0.15) 0%, rgba(219, 39, 119, 0.15) 100%);
+      box-shadow: var(--shadow-md);
+    }
+
+    #objectList p {
+      text-align: center;
+      color: var(--text-secondary);
+      border-left-color: var(--border-color);
+      background: linear-gradient(135deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.05) 100%);
+      font-weight: 500;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat-item {
+      padding: 18px;
+      background: linear-gradient(135deg, #7c3aed15 0%, #db277715 100%);
+      border-radius: 12px;
+      border-left: 4px solid var(--primary-light);
+      transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      color: var(--primary-color);
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-status {
+      color: var(--text-primary);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    /* Scrollbar Styling */
+    #objectList::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #objectList::-webkit-scrollbar-track {
+      background: rgba(123, 58, 237, 0.05);
+      border-radius: 10px;
+    }
+
+    #objectList::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      border-radius: 10px;
+    }
+
+    #objectList::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #5b21b6 0%, #be185d 100%);
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .detection-page-container {
+        padding: 20px 15px;
+      }
+
+      .detection-page-header h1 {
+        font-size: 32px;
+      }
+
+      .detection-page-header p {
+        font-size: 16px;
+      }
+
+      .camera-section {
+        padding: 25px;
+      }
+
+      .detected-objects-panel {
+        padding: 20px;
+      }
+
+      .detection-grid {
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <script src="scripts/load_nav.js"></script>
+
+  <div class="detection-page-container">
+    <!-- Header -->
+    <div class="detection-page-header">
+      <h1>🎥 Real-Time Object Detection</h1>
+      <p>Point your camera at objects and watch AI detect them in real-time with bounding boxes</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="detection-grid">
+      <!-- Camera Section -->
+      <div class="camera-section">
+        <div class="camera-header">
+          <span>📷 Live Camera Feed</span>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="camera-controls">
+          <button id="startCameraBtn">▶️ Start Camera</button>
+          <button id="stopCameraBtn">⏹️ Stop Camera</button>
+        </div>
+
+        <!-- Video Container with Canvas Overlay -->
+        <div class="video-container">
+          <video id="liveVideo" autoplay muted playsinline></video>
+          <canvas id="liveCanvas"></canvas>
+        </div>
+
+        <!-- Status -->
+        <div id="detectionStatus" class="detection-status">
+          ⏳ Click "Start Camera" to begin detection
+        </div>
+      </div>
+
+      <!-- Sidebar Panel -->
+      <div>
+        <!-- Detected Objects Panel -->
+        <div class="detected-objects-panel">
+          <h3>📦 Detected Objects</h3>
+          <ul id="objectList">
+            <li>Waiting for camera...</li>
+          </ul>
+
+          <!-- Statistics -->
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label">🎯 Objects</div>
+              <div class="stat-value" id="objectCount">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">⚡ FPS</div>
+              <div class="stat-value" id="fpsCount">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">📡 Status</div>
+              <div class="stat-status" id="cameraStatus">🔴 Inactive</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize button state when page loads
+    window.addEventListener('load', () => {
+      const startBtn = document.getElementById('startCameraBtn');
+      const stopBtn = document.getElementById('stopCameraBtn');
+      if (startBtn) {
+        startBtn.disabled = false;
+        startBtn.style.display = 'block';
+      }
+      if (stopBtn) {
+        stopBtn.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get DOM elements
+      const video = document.getElementById('liveVideo');
+      const canvas = document.getElementById('liveCanvas');
+      const ctx = canvas.getContext('2d');
+      const startCameraBtn = document.getElementById('startCameraBtn');
+      const stopCameraBtn = document.getElementById('stopCameraBtn');
+      const detectionStatus = document.getElementById('detectionStatus');
+      const objectList = document.getElementById('objectList');
+      const objectCountDisplay = document.getElementById('objectCount');
+      const fpsCountDisplay = document.getElementById('fpsCount');
+      const cameraStatusDisplay = document.getElementById('cameraStatus');
+      
+      // Ensure button is enabled
+      startCameraBtn.disabled = false;
+
+      let stream = null;
+      let detectInterval = null;
+      let frameCount = 0;
+      let lastFpsTime = Date.now();
+
+      // Set canvas size to match video
+      video.addEventListener('play', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        console.log(`Canvas size set to: ${canvas.width}x${canvas.height}`);
+      });
+
+      // Start Camera Button
+      startCameraBtn.addEventListener('click', async () => {
+        try {
+          detectionStatus.textContent = '⏳ Requesting camera access...';
+          startCameraBtn.disabled = true;
+
+          // Check if getUserMedia is available
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Camera API not supported in this browser');
+          }
+
+          // Request camera with constraints
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              facingMode: 'environment'  // Use rear camera if available
+            },
+            audio: false
+          }).catch(err => {
+            // If rear camera fails, try front camera
+            if (err.name === 'NotFoundError' || err.name === 'OverconstrainedError') {
+              console.log('Retrying with front camera...');
+              return navigator.mediaDevices.getUserMedia({
+                video: {
+                  width: { ideal: 640 },
+                  height: { ideal: 480 },
+                  facingMode: 'user'
+                },
+                audio: false
+              });
+            }
+            throw err;
+          });
+
+          video.srcObject = stream;
+          startCameraBtn.style.display = 'none';
+          stopCameraBtn.style.display = 'block';
+          cameraStatusDisplay.textContent = '🟢 Active';
+          detectionStatus.textContent = '✅ Camera started! Detecting objects...';
+
+          // Wait for video metadata to load
+          video.onloadedmetadata = () => {
+            console.log(`Video loaded: ${video.videoWidth}x${video.videoHeight}`);
+            video.play();
+            startDetectionLoop();
+          };
+        } catch (error) {
+          console.error('Camera error:', error);
+          let errorMsg = error.message;
+          let helpMsg = '';
+          
+          // Handle specific errors
+          if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            errorMsg = "Camera permission denied.";
+            helpMsg = "📍 STEPS TO FIX:\n1. Click the lock icon 🔒 in the address bar\n2. Find 'Camera' permission\n3. Select 'Allow'\n4. Reload the page and try again";
+          } else if (error.name === 'NotFoundError') {
+            errorMsg = "No camera device found.";
+            helpMsg = "Make sure a camera is connected to your computer.";
+          } else if (error.name === 'OverconstrainedError') {
+            errorMsg = "Camera constraints not supported by your camera.";
+            helpMsg = "Try a different browser or check your camera compatibility.";
+          } else if (error.name === 'NotReadableError') {
+            errorMsg = "Camera is already in use by another application.";
+            helpMsg = "Close other apps using the camera (e.g., Zoom, Teams, OBS).";
+          } else if (error.name === 'TypeError' || error.message.includes('scheme')) {
+            errorMsg = "This feature requires HTTPS or localhost.";
+            helpMsg = "Access the page via https:// or http://localhost";
+          } else if (error.message && error.message.includes('not supported')) {
+            errorMsg = "Camera API not supported in this browser.";
+            helpMsg = "Try using Chrome, Firefox, Edge, or Safari instead.";
+          }
+          
+          detectionStatus.innerHTML = `❌ <strong>${errorMsg}</strong><br><br><small>${helpMsg}</small>`;
+          startCameraBtn.disabled = false;
+          startCameraBtn.style.display = 'block';
+          stopCameraBtn.style.display = 'none';
+          cameraStatusDisplay.textContent = '🔴 Error';
+        }
+      });
+
+      // Stop Camera Button
+      stopCameraBtn.addEventListener('click', () => {
+        try {
+          if (stream) {
+            stream.getTracks().forEach(track => {
+              track.stop();
+            });
+            stream = null;
+          }
+        } catch (e) {
+          console.error('Error stopping camera:', e);
+        }
+        
+        if (detectInterval) {
+          clearInterval(detectInterval);
+          detectInterval = null;
+        }
+        
+        video.srcObject = null;
+        startCameraBtn.style.display = 'block';
+        stopCameraBtn.style.display = 'none';
+        startCameraBtn.disabled = false;
+        detectionStatus.textContent = '⏹️ Camera stopped';
+        cameraStatusDisplay.textContent = '🔴 Inactive';
+        objectList.innerHTML = '<li>Camera stopped. Click Start to resume.</li>';
+        objectCountDisplay.textContent = '0';
+        fpsCountDisplay.textContent = '0';
+        
+        // Clear canvas
+        try {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } catch (e) {
+          console.error('Error clearing canvas:', e);
+        }
+      });
+
+      // Detection Loop - Capture frames every 500ms
+      function startDetectionLoop() {
+        detectInterval = setInterval(async () => {
+          try {
+            // Check if video is ready
+            if (video.readyState !== 4) {
+              return;
+            }
+
+            // Draw current video frame to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to blob (JPEG)
+            canvas.toBlob(async (blob) => {
+              if (!blob) {
+                return;
+              }
+
+              // Create FormData with frame
+              const formData = new FormData();
+              formData.append('frame', blob, 'frame.jpg');
+
+              try {
+                // Send to backend
+                const response = await fetch('/api/detection/live', {
+                  method: 'POST',
+                  body: formData
+                });
+
+                if (!response.ok) {
+                  console.error('Server returned status:', response.status);
+                  detectionStatus.textContent = `⚠️ Server error: ${response.status}`;
+                  return;
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.objects) {
+                  drawDetections(data.objects);
+                  updateObjectList(data.objects);
+                  objectCountDisplay.textContent = data.total || data.objects.length;
+                  detectionStatus.textContent = `✅ Detecting... (${data.objects.length} objects)`;
+                } else {
+                  console.warn('Invalid response format:', data);
+                }
+
+                // Update FPS
+                frameCount++;
+                const now = Date.now();
+                if (now - lastFpsTime >= 1000) {
+                  fpsCountDisplay.textContent = frameCount;
+                  frameCount = 0;
+                  lastFpsTime = now;
+                }
+              } catch (fetchError) {
+                console.error('Fetch error:', fetchError);
+                detectionStatus.textContent = '❌ Connection error: ' + fetchError.message;
+              }
+            }, 'image/jpeg', 0.8);
+          } catch (error) {
+            console.error('Detection loop error:', error);
+          }
+        }, 500); // 2 FPS detection rate (every 500ms)
+      }
+
+      // Draw bounding boxes on canvas with vibrant colors
+      function drawDetections(objects) {
+        // Redraw video frame first
+        if (video.readyState === 4) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+
+        if (!objects || objects.length === 0) {
+          return;
+        }
+
+        // Vibrant colors matching the theme
+        const colors = [
+          { box: '#7c3aed', label: 'rgba(124, 58, 237, 0.95)' },
+          { box: '#db2777', label: 'rgba(219, 39, 119, 0.95)' },
+          { box: '#059669', label: 'rgba(5, 150, 105, 0.95)' },
+          { box: '#0891b2', label: 'rgba(8, 145, 178, 0.95)' },
+          { box: '#f97316', label: 'rgba(249, 115, 22, 0.95)' }
+        ];
+
+        // Draw each detected object
+        objects.forEach((obj, idx) => {
+          if (!obj.bbox) return;
+
+          const { x1, y1, x2, y2 } = obj.bbox;
+          const width = x2 - x1;
+          const height = y2 - y1;
+          const color = colors[idx % colors.length];
+
+          // Draw main vibrant bounding box
+          ctx.strokeStyle = color.box;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.rect(x1, y1, width, height);
+          ctx.stroke();
+
+          // Draw a second thinner highlight border for depth
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Draw label background
+          const label = `${obj.class_name} ${Math.round(obj.confidence * 100)}%`;
+          ctx.font = 'bold 15px Inter, "Segoe UI", sans-serif';
+          const textMetrics = ctx.measureText(label);
+          const textWidth = textMetrics.width + 12;
+          const textHeight = 26;
+
+          // Background for label with gradient effect
+          ctx.fillStyle = color.label;
+          ctx.fillRect(x1, y1 - textHeight - 5, textWidth, textHeight);
+
+          // Draw label text in white
+          ctx.fillStyle = '#ffffff';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, x1 + 6, y1 - textHeight / 2);
+        });
+      }
+
+      // Update detected objects list
+      function updateObjectList(objects) {
+        if (!objects || objects.length === 0) {
+          objectList.innerHTML = '<p>No objects detected yet</p>';
+          return;
+        }
+
+        let html = '';
+        objects.forEach((obj, idx) => {
+          const conf = Math.round(obj.confidence * 100);
+          html += `<li>🔹 ${obj.class_name} • <strong>${conf}%</strong></li>`;
+        });
+        objectList.innerHTML = html;
+      }
+    });
+  </script>
+</body>
+</html>

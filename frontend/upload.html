@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Image</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="site-nav"></div>
+  <script src="scripts/load_nav.js"></script>
+
+  <div class="upload-page-container">
+    <div class="upload-page-card">
+      <h2 class="result-title">🖼️ Upload Image for Classification</h2>
+      <p style="color: var(--text-secondary); text-align: center; margin-bottom: 25px; font-size: 16px;">Upload your image and our AI will classify it instantly</p>
+      
+      <p id="uploadStatus"></p>
+      
+      <form id="uploadForm" style="margin-bottom: 25px;">
+        <label for="imageFile" style="font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 12px;">📷 Select Image to Classify</label>
+        <input type="file" id="imageFile" accept="image/jpeg,image/jpg,image/png,image/webp" required />
+        
+        <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+          <button type="submit" name="action" value="classify" class="btn-gradient-primary" style="flex: 1; min-width: 150px;">🎯 Classify Image</button>
+          <button type="submit" name="action" value="describe" class="btn-gradient-secondary" style="flex: 1; min-width: 150px;">📝 Get Description</button>
+        </div>
+      </form>
+      
+      <div id="resultContainer" class="hidden">
+        <div class="upload-result-box">
+          <h3 style="color: var(--success-color); margin-bottom: 20px; text-align: center; font-size: 18px;">✅ Result</h3>
+          
+          <!-- Classification Result -->
+          <div id="classifyResult" style="display: none;">
+            <p style="margin-bottom: 15px;"><strong style="font-size: 16px;">Predicted Label:</strong></p>
+            <p style="text-align: center; font-size: 1.4em; font-weight: 700; background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px;" id="resultLabel">-</p>
+            
+            <p style="margin-bottom: 15px;"><strong style="font-size: 16px;">Confidence:</strong></p>
+            <p style="text-align: center; font-size: 1.4em; font-weight: 700; background: linear-gradient(135deg, #059669 0%, #0891b2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px;" id="resultConfidence">-</p>
+            
+            <p id="resultMessage" style="color: var(--text-secondary); font-size: 0.95em; text-align: center;"></p>
+          </div>
+          
+          <!-- Description Result -->
+          <div id="describeResult" style="display: none;">
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 15px; text-align: center;">📸 Image Caption</p>
+            <p id="resultDescription" style="color: var(--text-primary); font-size: 1.1em; line-height: 1.7; text-align: center; background: linear-gradient(135deg, rgba(123, 58, 237, 0.1) 0%, rgba(219, 39, 119, 0.1) 100%); padding: 20px; border-radius: 12px; border-left: 4px solid var(--primary-color);">-</p>
+          </div>
+          
+          <button type="button" onclick="resetForm()" class="btn-gradient-secondary" style="width: 100%; margin-top: 25px;">📸 Upload Another Image</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleLogout(event) {
+      event.preventDefault();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    function resetForm() {
+      document.getElementById('uploadForm').reset();
+      document.getElementById('resultContainer').classList.add('hidden');
+      document.getElementById('uploadStatus').innerText = '';
+    }
+
+    const userId = sessionStorage.getItem("user_id");
+    const statusElement = document.getElementById("uploadStatus");
+    const resultContainer = document.getElementById("resultContainer");
+    const submitBtn = document.querySelector("button[type='submit']");
+    const originalBtnText = submitBtn.textContent;
+
+    if (!userId) {
+      statusElement.classList.add('status-message', 'error');
+      statusElement.innerHTML = "⚠️ Please <a href='login.html'>log in</a> to upload images";
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.5";
+      submitBtn.style.cursor = "not-allowed";
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      if (!userId) {
+        statusElement.classList = 'status-message error';
+        statusElement.innerText = "❌ Please log in first";
+        return;
+      }
+
+      const fileInput = document.getElementById("imageFile");
+      const file = fileInput.files[0];
+      const action = e.submitter.value; // Get which button was clicked
+
+      if (!file) {
+        statusElement.classList = 'status-message error';
+        statusElement.innerText = "❌ Please select an image";
+        return;
+      }
+
+      if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+        statusElement.classList = 'status-message error';
+        statusElement.innerText = "❌ Invalid file type. Please select JPG, PNG, or WebP";
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        statusElement.classList = 'status-message error';
+        statusElement.innerText = "❌ File too large. Max size: 10MB";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("user_id", userId);
+
+      submitBtn.disabled = true;
+      resultContainer.classList.add('hidden');
+      
+      if (action === "classify") {
+        submitBtn.textContent = "⏳ Classifying...";
+        statusElement.className = 'status-message warning';
+        statusElement.innerText = "🔄 Processing image with CLIP model...";
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 60000);
+          
+          const response = await fetch("/api/predictions", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+          const data = await response.json();
+
+          if (data.success && data.label && data.confidence !== undefined) {
+            resultContainer.classList.remove('hidden');
+            document.getElementById("classifyResult").style.display = "block";
+            document.getElementById("describeResult").style.display = "none";
+            document.getElementById("resultLabel").innerText = data.label.toUpperCase();
+            document.getElementById("resultConfidence").innerText = `${(parseFloat(data.confidence) * 100).toFixed(2)}%`;
+            
+            const confidence = parseFloat(data.confidence);
+            let confidenceColor = "#48bb78";
+            if (confidence < 0.6) confidenceColor = "#f56565";
+            else if (confidence < 0.8) confidenceColor = "#ed8936";
+            document.getElementById("resultConfidence").style.color = confidenceColor;
+            
+            statusElement.className = 'status-message success';
+            statusElement.innerText = "✅ Classification successful!";
+          } else {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = `❌ Error: ${data.message || 'Classification failed'}`;
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          if (error.name === 'AbortError') {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = "❌ Request timeout. Try again.";
+          } else {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = "❌ Network error. Backend may be down.";
+          }
+        }
+      } else if (action === "describe") {
+        submitBtn.textContent = "⏳ Generating Caption...";
+        statusElement.className = 'status-message warning';
+        statusElement.innerText = "🔄 Analyzing image and generating caption...";
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 second timeout for caption model
+          
+          const response = await fetch("/api/describe", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+          const data = await response.json();
+
+          console.log("Caption Response:", data);
+
+          if (data.success && data.caption) {
+            resultContainer.classList.remove('hidden');
+            document.getElementById("classifyResult").style.display = "none";
+            document.getElementById("describeResult").style.display = "block";
+            
+            // Display caption with styling
+            const captionDiv = document.getElementById("resultDescription");
+            captionDiv.innerText = `"${data.caption}"`;
+            
+            statusElement.className = 'status-message success';
+            statusElement.innerText = "✅ Caption generated successfully!";
+            console.log("Caption:", data.caption);
+          } else {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = `❌ Error: ${data.message || 'Caption generation failed'}`;
+            console.error("Error response:", data);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          if (error.name === 'AbortError') {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = "❌ Request timeout (>3 min). Backend is processing. Try again.";
+          } else {
+            statusElement.className = 'status-message error';
+            statusElement.innerText = `❌ Network error: ${error.message}. Backend may be down.`;
+          }
+        }
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    });
+
+    document.getElementById("imageFile").addEventListener("change", function(e) {
+      if (this.files[0]) {
+        statusElement.className = '';
+        statusElement.style.color = "var(--text-secondary)";
+        statusElement.innerText = `📁 Selected: ${this.files[0].name} (${(this.files[0].size / 1024).toFixed(2)} KB)`;
+      }
+    });
+
+    // Warmup CLIP model in background on page load
+    window.addEventListener('load', function() {
+      console.log("Warming up CLIP model...");
+      fetch("/api/warmup")
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            console.log("✅ Model warmed up:", data);
+          } else {
+            console.warn("Warmup info:", data);
+          }
+        })
+        .catch(e => console.log("Warmup skipped (model will load on first prediction)"));
+    });
+  </script>
+</body>
+</html>

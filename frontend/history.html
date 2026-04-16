@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classification History</title>
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">Admin Panel</div>
+    <ul class="nav-links">
+      <li><a href="admin.html">Home</a></li>
+      <li><a href="users.html">Manage Users</a></li>
+      <li><a href="history.html" class="active">Classification History</a></li>
+      <li><a href="reports.html">Reports</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="login.html">Logout</a></li>
+    </ul>
+  </nav>
+    <style>
+     body {
+    background-image: url("sampleimage/prediction.jpeg"); /* 🔁 Change image name for each page */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    font-family: Arial, sans-serif;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3); /* 💡 Light transparent overlay */
+    z-index: -1;
+  }
+
+  .content-box {
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 30px;
+    border-radius: 12px;
+    margin: 60px auto;
+    max-width: 900px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+  }
+  </style>
+
+
+  <!-- HISTORY CONTENT -->
+  <section class="dashboard">
+    <h1>Classification History</h1>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Image</th>
+          <th>Predicted Label</th>
+          <th>Confidence</th>
+          <th>User</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><img src="sample1.jpg" alt="Sample" class="thumb"></td>
+          <td>Golden Retriever</td>
+          <td>95%</td>
+          <td>john@example.com</td>
+          <td>2025-08-24</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><img src="sample2.jpg" alt="Sample" class="thumb"></td>
+          <td>Sports Car</td>
+          <td>88%</td>
+          <td>jane@example.com</td>
+          <td>2025-08-23</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>

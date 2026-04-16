@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera & Detection Diagnostics</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: #f9f9f9;
+    }
+    .test-section h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .test-item {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+    }
+    .status-warning {
+      background: #fff3cd;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      margin-right: 10px;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    video {
+      max-width: 100%;
+      border-radius: 10px;
+      background: #000;
+      margin-top: 10px;
+    }
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 5px;
+      font-size: 13px;
+      color: #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Camera & Detection Diagnostics</h1>
+
+    <!-- Test 1: Server Connection -->
+    <div class="test-section">
+      <h2>1️⃣ Server Connection</h2>
+      <div id="serverTest"></div>
+      <button onclick="testServer()">Test Server</button>
+    </div>
+
+    <!-- Test 2: Camera Access -->
+    <div class="test-section">
+      <h2>2️⃣ Camera Access</h2>
+      <div id="cameraTest"></div>
+      <button onclick="testCamera()">Request Camera Access</button>
+      <button onclick="stopCamera()">Stop Camera</button>
+      <video id="testVideo" width="320" height="240" style="display:none;"></video>
+    </div>
+
+    <!-- Test 3: Detection API -->
+    <div class="test-section">
+      <h2>3️⃣ Detection API</h2>
+      <div id="detectionTest"></div>
+      <button onclick="testDetection()">Test Detection API</button>
+    </div>
+
+    <!-- Test 4: Browser Support -->
+    <div class="test-section">
+      <h2>4️⃣ Browser Capabilities</h2>
+      <div id="browserTest"></div>
+      <button onclick="checkBrowser()">Check Browser</button>
+    </div>
+
+    <!-- Solutions -->
+    <div class="test-section" style="background: #e8f5e9; border-color: #4caf50;">
+      <h2 style="color: #2e7d32;">💡 Solutions</h2>
+      <div class="info-box" style="background: #fff; border-left: 4px solid #4caf50; color: #333;">
+        <h3>If camera is not accessible:</h3>
+        <ol style="margin-left: 20px; margin-top: 10px;">
+          <li><strong>Chrome/Edge:</strong> Click the lock icon → Camera → Allow</li>
+          <li><strong>Firefox:</strong> Allow camera access in the permission popup</li>
+          <li><strong>Safari:</strong> Preferences → Security → Allow camera access</li>
+          <li><strong>HTTPS Required:</strong> Camera access only works over HTTPS or localhost</li>
+          <li><strong>Check Permissions:</strong> Run this diagnostic and allow access when prompted</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function log(elementId, message, type = 'info') {
+      const element = document.getElementById(elementId);
+      const statusClass = type === 'success' ? 'status-success' : type === 'error' ? 'status-error' : 'status-warning';
+      element.innerHTML += `<div class="test-item ${statusClass}">${message}</div>`;
+    }
+
+    function clear(elementId) {
+      document.getElementById(elementId).innerHTML = '';
+    }
+
+    // Test 1: Server Connection
+    async function testServer() {
+      clear('serverTest');
+      log('serverTest', '⏳ Testing server connection...', 'warning');
+      
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/health', { timeout: 5000 });
+        if (response.ok) {
+          log('serverTest', '✅ Server is running on http://127.0.0.1:5000', 'success');
+          log('serverTest', `✅ HTTP Status: ${response.status}`, 'success');
+        } else {
+          log('serverTest', `❌ Server returned status: ${response.status}`, 'error');
+        }
+      } catch (error) {
+        log('serverTest', `❌ Cannot connect to server: ${error.message}`, 'error');
+        log('serverTest', '⚠️  Make sure the backend is running: python run.py', 'warning');
+      }
+    }
+
+    // Test 2: Camera Access
+    let cameraStream = null;
+    async function testCamera() {
+      clear('cameraTest');
+      log('cameraTest', '⏳ Requesting camera access...', 'warning');
+      
+      try {
+        const constraints = {
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+          audio: false
+        };
+
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        const video = document.getElementById('testVideo');
+        video.srcObject = cameraStream;
+        video.style.display = 'block';
+        video.onloadedmetadata = () => {
+          video.play();
+        };
+        
+        const settings = cameraStream.getVideoTracks()[0].getSettings();
+        log('cameraTest', '✅ Camera access granted!', 'success');
+        log('cameraTest', `✅ Camera resolution: ${settings.width}x${settings.height}`, 'success');
+        log('cameraTest', '✅ You can now use the Object Detection page', 'success');
+      } catch (error) {
+        log('cameraTest', `❌ Camera access denied: ${error.name}`, 'error');
+        log('cameraTest', `   Error: ${error.message}`, 'error');
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          log('cameraTest', '⚠️  You need to ALLOW camera access in the browser', 'warning');
+          log('cameraTest', '⚠️  Check the permission popup and click "Allow"', 'warning');
+        } else if (error.name === 'NotFoundError') {
+          log('cameraTest', '⚠️  No camera device found on this computer', 'warning');
+        } else if (error.name === 'NotReadableError') {
+          log('cameraTest', '⚠️  Camera is already in use by another application', 'warning');
+        }
+      }
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+        document.getElementById('testVideo').style.display = 'none';
+        clear('cameraTest');
+        log('cameraTest', '✅ Camera stopped', 'success');
+      }
+    }
+
+    // Test 3: Detection API
+    async function testDetection() {
+      clear('detectionTest');
+      log('detectionTest', '⏳ Testing detection API...', 'warning');
+      
+      try {
+        // Create a test image (just a simple shape)
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw some shapes
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(50, 50, 100, 100);
+        ctx.fillStyle = '#0000ff';
+        ctx.fillRect(200, 100, 80, 80);
+        
+        // Convert to blob
+        canvas.toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append('frame', blob, 'test.jpg');
+          
+          try {
+            const response = await fetch('http://127.0.0.1:5000/api/detection/live', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              log('detectionTest', `✅ Detection API is working!`, 'success');
+              log('detectionTest', `✅ Response: ${data.success ? 'Success' : 'Failed'}`, 'success');
+              log('detectionTest', `✅ Found ${data.total || 0} objects`, 'success');
+              
+              if (data.objects && data.objects.length > 0) {
+                data.objects.forEach(obj => {
+                  log('detectionTest', `   - ${obj.class_name}: ${Math.round(obj.confidence * 100)}%`, 'success');
+                });
+              }
+            } else {
+              log('detectionTest', `❌ Server error: ${response.status}`, 'error');
+            }
+          } catch (error) {
+            log('detectionTest', `❌ API test failed: ${error.message}`, 'error');
+          }
+        }, 'image/jpeg');
+      } catch (error) {
+        log('detectionTest', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Test 4: Browser Support
+    function checkBrowser() {
+      clear('browserTest');
+      
+      // Check getUserMedia support
+      const hasGetUserMedia = !!(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+      );
+      
+      const browser = detectBrowser();
+      const isHttps = window.location.protocol === 'https:';
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      log('browserTest', `✅ Browser: ${browser}`, 'success');
+      log('browserTest', `${hasGetUserMedia ? '✅' : '❌'} getUserMedia API: ${hasGetUserMedia ? 'Supported' : 'Not supported'}`, hasGetUserMedia ? 'success' : 'error');
+      log('browserTest', `${isHttps || isLocalhost ? '✅' : '❌'} Protocol: ${window.location.protocol} ${isHttps || isLocalhost ? '(HTTPS/localhost OK)' : '(⚠️  Camera needs HTTPS or localhost)'}`, isHttps || isLocalhost ? 'success' : 'warning');
+      log('browserTest', `ℹ️  Hostname: ${window.location.hostname}`, 'warning');
+      log('browserTest', `${navigator.onLine ? '✅' : '❌'} Internet: ${navigator.onLine ? 'Online' : 'Offline'}`, navigator.onLine ? 'success' : 'error');
+    }
+
+    function detectBrowser() {
+      const ua = navigator.userAgent;
+      if (ua.indexOf('Firefox') > -1) return 'Firefox';
+      if (ua.indexOf('Chrome') > -1) return 'Chrome/Chromium';
+      if (ua.indexOf('Safari') > -1) return 'Safari';
+      if (ua.indexOf('Edge') > -1) return 'Edge';
+      return 'Unknown';
+    }
+
+    // Auto-test on page load
+    window.addEventListener('load', () => {
+      testServer();
+      checkBrowser();
+    });
+  </script>
+</body>
+</html>

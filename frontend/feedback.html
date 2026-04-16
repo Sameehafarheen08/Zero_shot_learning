@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feedback - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="site-nav"></div>
+  <script src="scripts/load_nav.js"></script>
+
+  <div class="upload-page-container">
+    <div class="upload-page-card">
+      <h2 class="result-title">💬 Send Us Your Feedback</h2>
+      <p style="color: var(--text-secondary); text-align: center; margin-bottom: 25px; font-size: 16px;">We'd love to hear what you think about our application</p>
+      
+      <p id="feedbackStatus"></p>
+      
+      <form id="feedbackForm" style="margin-bottom: 25px;">
+        <label for="message" style="font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 12px;">📝 Your Feedback</label>
+        <textarea 
+          id="message" 
+          placeholder="Tell us what you think..." 
+          required
+          style="width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 15px; font-family: Arial, sans-serif; resize: vertical; min-height: 180px; color: var(--text-primary); background: var(--bg-input);"
+        ></textarea>
+        
+        <button type="submit" class="btn-gradient-primary" style="width: 100%; margin-top: 20px; padding: 14px;">📤 Submit Feedback</button>
+      </form>
+
+      <div id="feedbackResult" class="hidden">
+        <div class="upload-result-box">
+          <h3 style="color: var(--success-color); margin-bottom: 20px; text-align: center; font-size: 18px;">✅ Success</h3>
+          <p style="color: var(--text-primary); font-size: 1.1em; line-height: 1.7; text-align: center; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(8, 145, 178, 0.1) 100%); padding: 20px; border-radius: 12px; border-left: 4px solid var(--success-color);">🙏 Thank you for your feedback! We appreciate your input.</p>
+          
+          <button type="button" onclick="resetFeedback()" class="btn-gradient-secondary" style="width: 100%; margin-top: 25px;">💬 Send Another Feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function resetFeedback() {
+      document.getElementById('feedbackForm').reset();
+      document.getElementById('feedbackResult').classList.add('hidden');
+      document.getElementById('feedbackStatus').innerText = '';
+    }
+
+    // Get user ID from session storage
+    const userId = sessionStorage.getItem("user_id");
+    const statusElement = document.getElementById("feedbackStatus");
+    const feedbackResult = document.getElementById("feedbackResult");
+    const submitBtn = document.querySelector("button[type='submit']");
+    const originalBtnText = submitBtn.textContent;
+
+    // Check if logged in
+    if (!userId) {
+      statusElement.classList.add('status-message', 'error');
+      statusElement.innerHTML = "⚠️ Please <a href='login.html'>log in</a> to submit feedback";
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.5";
+    }
+
+    document.getElementById("feedbackForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      // Check if user is logged in
+      if (!userId) {
+        statusElement.classList.add('status-message', 'error');
+        statusElement.innerText = "❌ Please log in first";
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 2000);
+        return;
+      }
+
+      const message = document.getElementById("message").value;
+
+      if (!message.trim()) {
+        statusElement.classList.add('status-message', 'error');
+        statusElement.innerText = "❌ Please enter your feedback";
+        return;
+      }
+
+      // Disable submit button
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ Submitting...";
+      statusElement.classList.add('status-message', 'warning');
+      statusElement.innerText = "🔄 Submitting feedback...";
+
+      try {
+        const response = await fetch("http://localhost:5000/api/feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: parseInt(userId),
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          statusElement.classList.remove('status-message', 'warning');
+          statusElement.classList.add('status-message', 'success');
+          statusElement.innerText = "✅ Thank you! Your feedback has been submitted.";
+          document.getElementById("feedbackForm").reset();
+          
+          // Show success box
+          feedbackResult.classList.remove('hidden');
+          
+          // Clear form and hide result after 5 seconds
+          setTimeout(() => {
+            feedbackResult.classList.add('hidden');
+            statusElement.innerText = '';
+          }, 5000);
+        } else {
+          statusElement.classList.remove('status-message', 'warning');
+          statusElement.classList.add('status-message', 'error');
+          statusElement.innerText = `❌ Error: ${data.message}`;
+        }
+      } catch (error) {
+        console.error("Error submitting feedback:", error);
+        statusElement.classList.remove('status-message', 'warning');
+        statusElement.classList.add('status-message', 'error');
+        statusElement.innerText = "❌ Network error. Please try again.";
+      } finally {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
+  </script>
+</body>
+</html>
+      warningDiv.innerText = "⚠️ Please log in to submit feedback";
+      document.querySelector(".form-container").insertBefore(warningDiv, document.querySelector("form"));
+    }
+  </script>
+</body>
+</html>

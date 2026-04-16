@@ -1,0 +1,92 @@
+ice cream
+hamburger
+pizza
+cooked rice
+bread loaf
+idli
+pongal
+poori Masala
+cake dessert
+fried chicken
+grilled fish
+spaghetti pasta
+salad greens
+fried rice
+biryani rice
+samosa snack
+dosa breakfast
+chapati bread
+naan bread
+paneer cheese
+dal lentils
+butter chicken
+mutton meat
+roasted vegetables
+grilled steak
+fried shrimp
+tikka skewer
+tandoori chicken
+
+cat animal
+dog animal
+cow animal
+horse animal
+bird animal
+fish animal
+
+wooden chair
+dining table
+drinking cup
+plate dish
+eating bowl
+metal spoon
+metal fork
+glass bottle
+drinking glass
+leather sofa
+table lamp
+ceiling fan
+
+mobile phone device
+laptop computer
+computer keyboard
+computer mouse
+tablet device
+charger
+headphone
+pen 
+digital camera
+audio headphones
+television screen
+office printer
+remote control
+
+apple fruit
+banana fruit
+orange fruit
+strawberry fruit
+mango fruit
+pineapple fruit
+
+
+tomato vegetable
+carrot vegetable
+cucumber vegetable
+bell pepper vegetable
+broccoli vegetable
+cauliflower vegetable
+
+pedestrian crossing sign
+children crossing sign
+no pedestrians sign
+parking sign
+no parking sign
+u-turn sign
+no u-turn sign
+road work sign
+no smoking sign
+no overtaking sign
+no right turn sign
+no left turn sign
+right curve sign
+left curve sign

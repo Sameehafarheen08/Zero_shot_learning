@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding-top: 0 !important;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .form-container {
+      margin-top: 0 !important;
+      max-width: 420px;
+      width: 90%;
+      animation: slideIn 0.5s ease-out;
+      box-shadow: var(--shadow-xl);
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .form-container h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 32px;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .form-container > p:first-of-type {
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    
+    .form-container p:last-child {
+      text-align: center;
+      margin-top: 25px;
+      color: var(--text-secondary);
+    }
+    
+    .form-container a {
+      color: var(--primary-color);
+      font-weight: 700;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    
+    .form-container a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>✨ Create Account</h2>
+    <p>Join our AI classification community</p>
+    
+    <p id="signupStatus"></p>
+    
+    <form id="signupForm">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" placeholder="your@email.com" required />
+      
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="At least 6 characters" required />
+      
+      <label for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" placeholder="Re-enter your password" required />
+      
+      <button type="submit">🔐 Create Account</button>
+    </form>
+    
+    <p>
+      Already have an account? <a href="login.html">Sign in here</a>
+    </p>
+  </div>
+
+  <script>
+    // Check if already logged in
+    if (sessionStorage.getItem("user_id")) {
+      window.location.href = "index.html";
+    }
+
+    const statusElement = document.getElementById("signupStatus");
+    const submitBtn = document.querySelector("button[type='submit']");
+    const originalBtnText = submitBtn.textContent;
+
+    document.getElementById("signupForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      // Validation
+      if (!email || !password || !confirmPassword) {
+        statusElement.style.color = "red";
+        statusElement.innerText = "❌ Please fill in all fields";
+        return;
+      }
+
+      if (!email.includes("@")) {
+        statusElement.style.color = "red";
+        statusElement.innerText = "❌ Invalid email format";
+        return;
+      }
+
+      if (password.length < 6) {
+        statusElement.style.color = "red";
+        statusElement.innerText = "❌ Password must be at least 6 characters";
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        statusElement.style.color = "red";
+        statusElement.innerText = "❌ Passwords don't match";
+        return;
+      }
+
+      // Disable button
+      submitBtn.disabled = true;
+      submitBtn.textContent = "📝 Creating account...";
+      statusElement.style.color = "blue";
+      statusElement.innerText = "⏳ Creating your account...";
+
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          statusElement.style.color = "green";
+          statusElement.innerText = "✅ Account created! Redirecting to login...";
+
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+        } else {
+          statusElement.style.color = "red";
+          statusElement.innerText = `❌ ${data.message}`;
+        }
+      } catch (error) {
+        console.error("Signup error:", error);
+        statusElement.style.color = "red";
+        statusElement.innerText = "❌ Network error. Please check if backend is running.";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
+  </script>

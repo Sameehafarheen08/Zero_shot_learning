@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prediction Result</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">ZeroShot Classifier</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="upload.html">Upload</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="compare.html">Compare</a></li>
+      <li><a href="Ask.html">Ask AI</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="login.html">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="result-container">
+    <div class="result-card">
+      <h2 class="result-title">Prediction Result</h2>
+      <div id="resultContent" class="result-content">
+        <p>Loading prediction result...</p>
+      </div>
+      <div class="result-actions">
+        <button onclick="window.location.href='upload.html'" class="btn-gradient-primary">Upload Another</button>
+        <button onclick="window.location.href='index.html'" class="btn-gradient-secondary">Home</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if (!sessionStorage.getItem('user_id')) {
+      window.location.href = 'login.html';
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const predictionId = urlParams.get('id');
+
+    async function loadResult() {
+      try {
+        const token = sessionStorage.getItem('token');
+        
+        if (!predictionId) {
+          document.getElementById('resultContent').innerHTML = '<p style="color: red;">No prediction ID provided</p>';
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/predictions/${predictionId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          const pred = data.data.prediction;
+          const confidence = (pred.confidence * 100).toFixed(2);
+          document.getElementById('resultContent').innerHTML = `
+            <img src="${pred.image_path}" alt="Uploaded" style="width:100%;max-width:400px;border-radius:8px;margin-bottom:20px;" />
+            <p><strong style="font-size: 1.3em;">Predicted Label:</strong> <em style="font-size: 1.3em; color: #1a755a;">${pred.classification_result}</em></p>
+            <p><strong>Confidence:</strong> <span style="font-size: 1.2em; color: #48bb78;">${confidence}%</span></p>
+            <p><strong>Timestamp:</strong> ${new Date(pred.timestamp).toLocaleString()}</p>
+          `;
+        } else {
+          document.getElementById('resultContent').innerHTML = '<p style="color: red;">Error loading result</p>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('resultContent').innerHTML = '<p style="color: red;">Error loading result. Make sure backend is running.</p>';
+      }
+    }
+    
+    window.addEventListener('load', loadResult);
+  </script>
+</body>
+</html>

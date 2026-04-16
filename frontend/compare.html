@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compare Images - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="site-nav"></div>
+  <script src="scripts/load_nav.js"></script>
+
+  <div class="upload-page-container">
+    <div class="upload-page-card">
+      <h2 class="result-title">🔄 Compare Two Images</h2>
+      <p id="compareStatus"></p>
+
+      <div class="form-inputs-section">
+        <div class="input-box">
+          <label for="image1">📷 Image 1</label>
+          <input type="file" id="image1" accept="image/jpeg,image/jpg,image/png,image/webp" />
+          <img id="preview1" style="display: none; max-width: 100%; margin-top: 15px; border-radius: 15px; max-height: 250px; object-fit: contain; box-shadow: 0 10px 25px rgba(123, 58, 237, 0.2);" />
+        </div>
+        
+        <div class="input-box">
+          <label for="image2">📷 Image 2</label>
+          <input type="file" id="image2" accept="image/jpeg,image/jpg,image/png,image/webp" />
+          <img id="preview2" style="display: none; max-width: 100%; margin-top: 15px; border-radius: 15px; max-height: 250px; object-fit: contain; box-shadow: 0 10px 25px rgba(123, 58, 237, 0.2);" />
+        </div>
+      </div>
+
+      <button id="compareBtn" onclick="compareImages()" disabled class="btn-gradient-primary" style="width: 100%; margin-top: 25px; margin-bottom: 20px;">🔍 Compare Images</button>
+
+      <div id="resultContainer" style="display: none;">
+        <div class="compare-results-grid">
+          <div class="compare-result-card">
+            <h3 style="color: var(--success-color); margin-bottom: 15px; text-align: center; font-size: 18px;">📊 Image 1 Result</h3>
+            <p style="margin: 15px 0;"><strong>Label:</strong> <span id="resultLabel1" style="color: var(--primary-color); font-size: 1.2em; background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">-</span></p>
+            <p style="margin: 15px 0;"><strong>Confidence:</strong> <span id="resultConf1" style="font-size: 1.2em; background: linear-gradient(135deg, #059669 0%, #0891b2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">-</span></p>
+            <div id="predictions1"></div>
+          </div>
+          
+          <div class="compare-result-card">
+            <h3 style="color: var(--success-color); margin-bottom: 15px; text-align: center; font-size: 18px;">📊 Image 2 Result</h3>
+            <p style="margin: 15px 0;"><strong>Label:</strong> <span id="resultLabel2" style="color: var(--primary-color); font-size: 1.2em; background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">-</span></p>
+            <p style="margin: 15px 0;"><strong>Confidence:</strong> <span id="resultConf2" style="font-size: 1.2em; background: linear-gradient(135deg, #059669 0%, #0891b2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">-</span></p>
+            <div id="predictions2"></div>
+          </div>
+        </div>
+
+        <div id="comparisonResult" class="comparison-result-card" style="display: none; margin-top: 25px;">
+          <h3 style="margin-bottom: 15px; text-align: center; font-size: 18px;">📊 Comparison Analysis</h3>
+          <p id="comparisonText" style="font-size: 16px; line-height: 1.8; color: var(--text-primary);"></p>
+        </div>
+      </div>
+
+      <button onclick="resetCompare()" class="btn-gradient-secondary" style="width: 100%; margin-top: 20px;">🔄 Compare Another Pair</button>
+    </div>
+  </div>
+
+  <script>
+    function handleLogout(event) {
+      event.preventDefault();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    if (!sessionStorage.getItem('user_id')) {
+      window.location.href = 'login.html';
+    }
+
+    const image1 = document.getElementById('image1');
+    const image2 = document.getElementById('image2');
+    const preview1 = document.getElementById('preview1');
+    const preview2 = document.getElementById('preview2');
+    const compareBtn = document.getElementById('compareBtn');
+    const statusEl = document.getElementById('compareStatus');
+    const resultContainer = document.getElementById('resultContainer');
+    const comparisonResult = document.getElementById('comparisonResult');
+    const originalBtnText = compareBtn.textContent;
+
+    image1.addEventListener('change', function() {
+      if (this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview1.src = e.target.result;
+          preview1.style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+      checkBothImages();
+    });
+
+    image2.addEventListener('change', function() {
+      if (this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview2.src = e.target.result;
+          preview2.style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+      }
+      checkBothImages();
+    });
+
+    function checkBothImages() {
+      compareBtn.disabled = !image1.files[0] || !image2.files[0];
+    }
+
+    async function compareImages() {
+      const userId = sessionStorage.getItem('user_id');
+      statusEl.className = 'status-message warning';
+      statusEl.innerText = '⏳ Processing both images...';
+      compareBtn.disabled = true;
+      compareBtn.textContent = '⏳ Comparing...';
+
+      try {
+        const form1 = new FormData();
+        form1.append('file', image1.files[0]);
+        form1.append('user_id', userId);
+
+        const resp1 = await fetch('/api/predictions', {
+          method: 'POST',
+          body: form1,
+          timeout: 60000
+        });
+
+        const data1 = await resp1.json();
+        if (!data1.success || !data1.top_label) throw new Error(data1.message || 'Failed to classify image 1');
+
+        const form2 = new FormData();
+        form2.append('file', image2.files[0]);
+        form2.append('user_id', userId);
+
+        const resp2 = await fetch('/api/predictions', {
+          method: 'POST',
+          body: form2,
+          timeout: 60000
+        });
+
+        const data2 = await resp2.json();
+        if (!data2.success || !data2.top_label) throw new Error(data2.message || 'Failed to classify image 2');
+
+        document.getElementById('resultLabel1').innerText = data1.top_label.toUpperCase();
+        document.getElementById('resultConf1').innerText = (parseFloat(data1.top_confidence) * 100).toFixed(2) + '%';
+        
+        document.getElementById('resultLabel2').innerText = data2.top_label.toUpperCase();
+        document.getElementById('resultConf2').innerText = (parseFloat(data2.top_confidence) * 100).toFixed(2) + '%';
+
+        // Display top 3 predictions for both images
+        const pred1Html = (data1.predictions || []).map((pred, idx) => 
+          `<div style="margin: 8px 0; padding: 10px; background: rgba(102, 126, 234, 0.15); border-left: 3px solid #667eea; border-radius: 4px;">
+            <strong>${idx + 1}. ${pred.label}</strong>: ${(pred.confidence * 100).toFixed(2)}%
+          </div>`
+        ).join('');
+        
+        const pred2Html = (data2.predictions || []).map((pred, idx) => 
+          `<div style="margin: 8px 0; padding: 10px; background: rgba(102, 126, 234, 0.15); border-left: 3px solid #667eea; border-radius: 4px;">
+            <strong>${idx + 1}. ${pred.label}</strong>: ${(pred.confidence * 100).toFixed(2)}%
+          </div>`
+        ).join('');
+
+        // Add predictions to the result boxes if they don't exist yet
+        let pred1Container = document.getElementById("predictions1");
+        if (!pred1Container) {
+          pred1Container = document.createElement('div');
+          pred1Container.id = "predictions1";
+          pred1Container.style.marginTop = "12px";
+          resultContainer.querySelector('[style*="grid"]').children[0].appendChild(pred1Container);
+        }
+        pred1Container.innerHTML = pred1Html ? `<h5 style="margin-bottom: 8px; color: #667eea;">All Predictions:</h5>${pred1Html}` : '';
+
+        let pred2Container = document.getElementById("predictions2");
+        if (!pred2Container) {
+          pred2Container = document.createElement('div');
+          pred2Container.id = "predictions2";
+          pred2Container.style.marginTop = "12px";
+          resultContainer.querySelector('[style*="grid"]').children[1].appendChild(pred2Container);
+        }
+        pred2Container.innerHTML = pred2Html ? `<h5 style="margin-bottom: 8px; color: #667eea;">All Predictions:</h5>${pred2Html}` : '';
+
+
+        const compText = document.getElementById('comparisonText');
+        
+        // Calculate semantic similarity based on label text and confidence
+        const label1 = data1.top_label.toLowerCase();
+        const label2 = data2.top_label.toLowerCase();
+        const conf1 = parseFloat(data1.top_confidence);
+        const conf2 = parseFloat(data2.top_confidence);
+        
+        // Check if labels are the same (exact match)
+        const sameLabel = label1 === label2;
+        
+        // If labels are exactly the same, it's a VERY SIMILAR match (regardless of confidence)
+        if (sameLabel) {
+          const avgConfPercent = ((conf1 + conf2) / 2 * 100).toFixed(1);
+          compText.innerHTML = '✅ <strong>VERY SIMILAR:</strong> Both images are classified as <strong>' + data1.top_label + '</strong> (Similarity: 100%)';
+          comparisonResult.style.background = 'rgba(72, 187, 120, 0.2)';
+          comparisonResult.style.borderColor = '#48bb78';
+        } else {
+          // Calculate text similarity (simple word overlap) for different labels
+          const words1 = label1.split(/\s+/);
+          const words2 = label2.split(/\s+/);
+          const commonWords = words1.filter(w => words2.includes(w)).length;
+          const totalWords = Math.max(words1.length, words2.length);
+          const textSimilarity = commonWords / totalWords;
+          
+          // Calculate overall similarity score (0-1)
+          const avgConfidence = (conf1 + conf2) / 2;
+          let similarityScore = 0;
+          
+          if (textSimilarity > 0.3) {
+            similarityScore = textSimilarity * avgConfidence; // Related labels
+          } else {
+            similarityScore = textSimilarity; // Weak relationship
+          }
+          
+          const similarityPercent = (similarityScore * 100).toFixed(1);
+          
+          if (similarityScore > 0.5) {
+            compText.innerHTML = '⚠️ <strong>MODERATELY SIMILAR:</strong> Related concepts - Image 1: <strong>' + data1.top_label + '</strong>, Image 2: <strong>' + data2.top_label + '</strong> (Similarity: ' + similarityPercent + '%)';
+            comparisonResult.style.background = 'rgba(237, 137, 54, 0.2)';
+            comparisonResult.style.borderColor = '#ed8936';
+          } else if (similarityScore > 0.2) {
+            compText.innerHTML = 'ℹ️ <strong>DIFFERENT:</strong> Image 1 is <strong>' + data1.top_label + '</strong>, Image 2 is <strong>' + data2.top_label + '</strong> (Similarity: ' + similarityPercent + '%)';
+            comparisonResult.style.background = 'rgba(102, 126, 234, 0.15)';
+            comparisonResult.style.borderColor = '#667eea';
+          } else {
+            compText.innerHTML = '❌ <strong>VERY DIFFERENT:</strong> Image 1 is <strong>' + data1.top_label + '</strong>, Image 2 is <strong>' + data2.top_label + '</strong> (Similarity: ' + similarityPercent + '%)';
+            comparisonResult.style.background = 'rgba(245, 101, 101, 0.15)';
+            comparisonResult.style.borderColor = '#f56565';
+          }
+        }
+
+        comparisonResult.style.display = 'block';
+        resultContainer.style.display = 'block';
+        statusEl.className = 'status-message success';
+        statusEl.innerText = '✅ Comparison complete!';
+
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.className = 'status-message error';
+        statusEl.innerText = '❌ ' + error.message;
+      } finally {
+        compareBtn.disabled = false;
+        compareBtn.textContent = originalBtnText;
+      }
+    }
+
+    function resetCompare() {
+      image1.value = '';
+      image2.value = '';
+      preview1.style.display = 'none';
+      preview2.style.display = 'none';
+      resultContainer.style.display = 'none';
+      comparisonResult.style.display = 'none';
+      statusEl.innerText = '';
+      checkBothImages();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">🎨 ZeroShot Classifier</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="upload.html">Upload</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="compare.html">Compare</a></li>
+      <li><a href="Ask.html">Ask AI</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="#" onclick="handleLogout(event)">Logout</a></li>
+    </ul>
+  </nav>
+    <div id="site-nav"></div>
+    <script src="scripts/load_nav.js"></script>
+
+  <div class="form-container">
+    <h2>👤 Your Profile</h2>
+    <p style="color: var(--text-secondary); text-align: center; margin-bottom: 20px;">View your account and classification history</p>
+    
+    <div id="profileContent" style="color: var(--text-secondary);">
+      <p style="text-align: center;">⏳ Loading profile data...</p>
+    </div>
+    
+    <button onclick="window.location.href='index.html'" style="margin-top: 20px; background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);">🏠 Back to Home</button>
+  </div>
+
+  <script>
+    function handleLogout(event) {
+      event.preventDefault();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    if (!sessionStorage.getItem('user_id')) {
+      window.location.href = 'login.html';
+    }
+
+    async function loadProfile() {
+      try {
+        const userId = sessionStorage.getItem('user_id');
+        const token = sessionStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:5000/api/user/${userId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          const profileContent = document.getElementById('profileContent');
+          const user = data.user;
+          profileContent.innerHTML = `
+            <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <p><strong style="color: var(--primary-color);">Email:</strong> <span style="color: var(--text-primary);">${user.email}</span></p>
+              <p><strong style="color: var(--primary-color);">Member Since:</strong> <span style="color: var(--text-primary);">${new Date(user.created_at).toLocaleDateString()}</span></p>
+              <p id="totalUploads" style="margin-top: 10px;"><strong style="color: var(--primary-color);">Total Predictions:</strong> <span style="color: var(--text-primary);">Loading...</span></p>
+              <p id="recentPrediction" style="margin-top: 10px;"><strong style="color: var(--primary-color);">Recent Prediction:</strong> <span style="color: var(--text-primary);">Loading...</span></p>
+            </div>
+          `;
+
+          const predResponse = await fetch(`http://localhost:5000/api/user/${userId}/predictions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const predData = await predResponse.json();
+          
+          if (predData.success && predData.predictions && predData.predictions.length > 0) {
+            const predictions = predData.predictions;
+            document.getElementById('totalUploads').innerHTML = `<strong style="color: var(--primary-color);">Total Predictions:</strong> <span style="color: var(--text-primary);">${predictions.length}</span>`;
+            const recent = predictions[0];
+            const confidence = parseFloat(recent.confidence_scores);
+            let confidenceColor = '#48bb78';
+            if (confidence < 0.6) confidenceColor = '#f56565';
+            else if (confidence < 0.8) confidenceColor = '#ed8936';
+            document.getElementById('recentPrediction').innerHTML = `<strong style="color: var(--primary-color);">Recent Prediction:</strong> <span style="color: ${confidenceColor}; font-weight: bold;">${recent.predicted_labels.toUpperCase()} (${(confidence * 100).toFixed(2)}%)</span>`;
+          } else {
+            document.getElementById('totalUploads').innerHTML = `<strong style="color: var(--primary-color);">Total Predictions:</strong> <span style="color: var(--text-primary);">0</span>`;
+            document.getElementById('recentPrediction').innerHTML = `<strong style="color: var(--primary-color);">Recent Prediction:</strong> <span style="color: var(--text-secondary);">No predictions yet</span>`;
+          }
+        } else {
+          document.getElementById('profileContent').innerHTML = '<p style="color: var(--danger-color);">Error loading profile</p>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('profileContent').innerHTML = '<p style="color: var(--danger-color);">Error loading profile. Make sure backend is running.</p>';
+      }
+    }
+    
+    window.addEventListener('load', loadProfile);
+  </script>
+</body>
+</html>

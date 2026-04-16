@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ask AI - ZeroShot Classifier</title>
+  <link rel="stylesheet" href="style.css?v=3" />
+  <style>
+    .ask-container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .ask-box {
+      background: #2d3748;
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid #4a5568;
+    }
+
+    .ask-title {
+      font-size: 2em;
+      color: #e2e8f0;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .ask-subtitle {
+      text-align: center;
+      color: #cbd5e0;
+      margin-bottom: 30px;
+      font-size: 0.95em;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-weight: bold;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #4a5568;
+      border-radius: 6px;
+      font-size: 1em;
+      font-family: Arial, sans-serif;
+      transition: all 0.3s ease;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .input-field.textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+      flex-direction: column;
+    }
+
+    .btn-ask {
+      flex: 1;
+      padding: 12px 24px;
+      background-color: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .btn-ask:hover {
+      background-color: #5568d3;
+    }
+
+    .btn-ask:disabled {
+      background-color: #cbd5e0;
+      cursor: not-allowed;
+    }
+
+    .btn-reset {
+      padding: 12px 24px;
+      background-color: #48bb78;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .btn-reset:hover {
+      background-color: #38a169;
+    }
+
+    .response-container {
+      margin-top: 30px;
+      padding: 20px;
+      background: #2d3748;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      display: none;
+    }
+
+    .response-container.show {
+      display: block;
+    }
+
+    .response-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #e2e8f0;
+      margin-bottom: 15px;
+    }
+
+    .response-text {
+      color: #cbd5e0;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+
+    .loading {
+      text-align: center;
+      color: #999;
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #1a755a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #ffebee;
+      border-left: 4px solid #f56565;
+      color: #c62828;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .ask-box {
+        padding: 20px;
+      }
+
+      .ask-title {
+        font-size: 1.5em;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-nav"></div>
+  <script src="scripts/load_nav.js"></script>
+  <div class="ask-container">
+    <div class="ask-box">
+      <h1 class="ask-title">🧠 Ask AI</h1>
+      <p class="ask-subtitle">Ask me anything - just like ChatGPT or Copilot</p>
+
+      <div class="error" id="errorMsg"></div>
+
+      <div class="input-group">
+        <label class="input-label">Your Question</label>
+        <textarea id="userQuestion" class="input-field textarea" placeholder="Ask me anything... What is this? How does it work? Tell me more about..." required></textarea>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-ask" id="askBtn" onclick="askAI()">
+          ✨ Ask AI
+        </button>
+        <button class="btn-reset" onclick="resetForm()">🔄 Clear</button>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>Thinking...</span>
+      </div>
+
+      <div class="response-container" id="responseContainer">
+        <div class="response-title">💡 Response</div>
+        <div class="response-text" id="responseText"></div>
+      </div>
+
+      <button onclick="window.location.href='index.html'" style="display: block; width: 100%; margin-top: 20px; background-color: #666; color: white; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        ← Back to Home
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function handleLogout(event) {
+      event.preventDefault();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    if (!sessionStorage.getItem('user_id')) {
+      window.location.href = 'login.html';
+    }
+
+    async function askAI() {
+      try {
+        const question = document.getElementById('userQuestion').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+        const loading = document.getElementById('loading');
+        const responseContainer = document.getElementById('responseContainer');
+        const responseText = document.getElementById('responseText');
+        const askBtn = document.getElementById('askBtn');
+        const userId = sessionStorage.getItem('user_id');
+
+        errorMsg.classList.remove('show');
+
+        if (!question) {
+          errorMsg.textContent = '❌ Please ask a question';
+          errorMsg.classList.add('show');
+          return;
+        }
+
+        loading.style.display = 'block';
+        responseContainer.classList.remove('show');
+        askBtn.disabled = true;
+
+        // Call backend API with the NEW endpoint
+        const response = await fetch('/api/ask-ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: parseInt(userId) || 1,
+            question: question
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          const aiResponse = data.data.response || 'No response received';
+          responseText.innerHTML = `<p>${aiResponse}</p>`;
+          responseContainer.classList.add('show');
+          document.getElementById('userQuestion').value = ''; // Clear input
+        } else {
+          throw new Error(data.message || 'Failed to get response from AI');
+        }
+
+        loading.style.display = 'none';
+
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('errorMsg').textContent = '❌ ' + (error.message || 'Network error - AI service unavailable. Please try again.');
+        document.getElementById('errorMsg').classList.add('show');
+        document.getElementById('loading').style.display = 'none';
+      } finally {
+        document.getElementById('askBtn').disabled = false;
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('userQuestion').value = '';
+      document.getElementById('responseContainer').classList.remove('show');
+      document.getElementById('errorMsg').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

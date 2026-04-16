@@ -1,0 +1,107 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+zero_shot_classifier.db
+
+# Model files (large)
+*.pt
+yolov8n.pt
+
+# Uploads and temp files
+backend/static/uploads/
+backend/static/detection_results/
+backend/static/detection_uploads/
+frontend/sampleimage/
+/backend/backend/static/uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Environment variables
+.env
+.env.local
+
+# Credentials and Debug files
+show_admin_credentials.py
+reset_all_passwords.py
+show_feedback_location.py
+check_password_hash.py
+CAMERA_TROUBLESHOOTING.md
+
+# Test and Debug files
+test_*.py
+debug_*.py
+final_check.py
+test_output.txt
+
+# Windows batch files
+RUN_ME.bat
+
+# Documentation (auto-generated)
+ADMIN_FIXES.md
+CHANGES_LOG.md
+COMPLETION_SUMMARY.md
+DOCUMENTATION_GUIDE.md
+DOCUMENTATION_INDEX.md
+FINAL_STATUS.md
+FINAL_VERIFICATION.md
+HOW_TO_RUN.md
+IMPLEMENTATION_COMPLETE.md
+IMPLEMENTATION_SUMMARY.md
+PROJECT_COMPLETION_REPORT.md
+PROJECT_STATUS.md
+PROJECT_STRUCTURE.md
+QUICK_REFERENCE.md
+QUICK_START.md
+SETUP_COMPLETE.md
+SETUP_GUIDE.md
+.github/
+
+# Instance folder
+backend/instance/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*.pot
+.vscode/settings.json

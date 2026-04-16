@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin Panel</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">⚙️</div>
+                <h1 class="sidebar-title">Admin</h1>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="admin_panel.html" title="Dashboard">
+                        <span style="font-size: 20px;">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_users.html" class="active" title="Manage Users">
+                        <span style="font-size: 20px;">👥</span>
+                        <span>Manage Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_history.html" title="Classification History">
+                        <span style="font-size: 20px;">📁</span>
+                        <span>History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_feedback.html" title="User Feedback">
+                        <span style="font-size: 20px;">💬</span>
+                        <span>Feedback</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <button class="logout-btn" id="logoutBtn">
+                🚪 Logout
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">👥 Manage Users</h1>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2 class="table-title">All Registered Users</h2>
+                    <div class="table-search">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search by email...">
+                    </div>
+                </div>
+
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>Signup Date</th>
+                            <th>Predictions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #cbd5e0; padding: 40px;">
+                                <div class="spinner"></div>
+                                Loading users...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-grid" style="margin-top: 30px;">
+                <div class="stat-card gradient-1">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="totalUsersCount">0</div>
+                </div>
+
+                <div class="stat-card gradient-3">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-label">Active Users</div>
+                    <div class="stat-value" id="activeUsersCount">0</div>
+                </div>
+
+                <div class="stat-card gradient-2">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-label">Avg Predictions/User</div>
+                    <div class="stat-value" id="avgPredictions">0</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                ⚠️ Confirm Deletion
+            </div>
+            <p style="color: #cbd5e0; margin-bottom: 20px;">
+                Are you sure you want to delete user <strong id="deleteUserEmail" style="color: #667eea;"></strong>? 
+                This will also delete all their predictions and feedback. This action cannot be undone.
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let usersData = [];
+        let userToDelete = null;
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            filterUsers(searchTerm);
+        });
+
+        // Load users data
+        async function loadUsers() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('http://localhost:5000/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success && (data.users || data.data?.users)) {
+                    usersData = data.users || data.data.users;
+                    displayUsers(usersData);
+                    updateStats();
+                } else {
+                    showNoUsers();
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showAlert('Error loading users', 'danger');
+            }
+        }
+
+        // Display users in table
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                showNoUsers();
+                return;
+            }
+
+            users.forEach((user, index) => {
+                const date = new Date(user.created_at).toLocaleDateString();
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${escapeHtml(user.email)}</strong></td>
+                    <td style="font-size: 12px; color: #cbd5e0;">${date}</td>
+                    <td>
+                        <span style="background: rgba(102, 126, 234, 0.2); padding: 4px 8px; border-radius: 4px; color: #667eea; font-weight: 600;">
+                            ${user.prediction_count || 0}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="status active">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: #48bb78; border-radius: 50%; margin-right: 4px;"></span>
+                            Active
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-small btn-danger" onclick="openDeleteModal(${user.id}, '${user.email}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Show no users message
+        function showNoUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 60px 20px;">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-title">No Users Found</div>
+                        <div class="empty-message" style="color: #cbd5e0;">
+                            There are no registered users yet.
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Filter users
+        function filterUsers(searchTerm) {
+            const filtered = usersData.filter(user => 
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            displayUsers(filtered);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalCount = usersData.length;
+            document.getElementById('totalUsersCount').textContent = totalCount;
+            
+            // All users are considered active
+            document.getElementById('activeUsersCount').textContent = totalCount;
+
+            if (totalCount > 0) {
+                const totalPredictions = usersData.reduce((sum, user) => sum + (user.prediction_count || 0), 0);
+                const avgPred = (totalPredictions / totalCount).toFixed(1);
+                document.getElementById('avgPredictions').textContent = avgPred;
+            }
+        }
+
+        // Delete functionality
+        function openDeleteModal(userId, email) {
+            userToDelete = { id: userId, email: email };
+            document.getElementById('deleteUserEmail').textContent = email;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            userToDelete = null;
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+            if (!userToDelete) return;
+
+            try {
+                const token = sessionStorage.getItem('token');
+                const response = await fetch(`http://localhost:5000/api/admin/users/${userToDelete.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('User deleted successfully', 'success');
+                    closeDeleteModal();
+                    loadUsers();
+                } else {
+                    showAlert('Error deleting user', 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showAlert('Error deleting user', 'danger');
+            }
+        });
+
+        // Alert functionality
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `<strong>${type === 'success' ? '✓' : '✕'} ${message}</strong>`;
+            alertDiv.style.display = 'flex';
+
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load on page load
+        window.addEventListener('load', function() {
+            const isAdmin = sessionStorage.getItem('is_admin');
+            if (isAdmin !== 'true') {
+                window.location.href = 'login.html';
+            }
+            loadUsers();
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>

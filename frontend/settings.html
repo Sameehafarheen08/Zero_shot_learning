@@ -1,0 +1,66 @@
+<!-- Settings Section -->
+<section id="settings" class="content-section">
+  <h2>⚙️ Settings</h2></section>
+  <form class="settings-form"><br><br><br>
+    <div class="form-group"><br><br><br>
+      <label for="adminEmail">Admin Email</label><br><br><br>
+      <input type="email" id="adminEmail" name="adminEmail" value="admin@example.com" required>
+    </div>
+      <style>
+     body {
+    background-image: url("sampleimage/home.jpeg"); /* 🔁 Change image name for each page */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    font-family: Arial, sans-serif;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3); /* 💡 Light transparent overlay */
+    z-index: -1;
+  }
+
+  .content-box {
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 30px;
+    border-radius: 12px;
+    margin: 60px auto;
+    max-width: 900px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+  }
+  </style>
+
+
+    <div class="form-group">
+      <label for="adminPassword">Change Password</label>
+      <input type="password" id="adminPassword" name="adminPassword" placeholder="Enter new password">
+    </div>
+
+    <div class="form-group">
+      <label for="themeSelect">Theme Preference</label>
+      <select id="themeSelect" name="themeSelect">
+        <option value="light">Light Mode</option>
+        <option value="dark">Dark Mode</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="emailAlerts" checked>
+        Enable Email Notifications
+      </label>
+    </div>
+
+    <button type="submit" class="save-btn">💾 Save Changes</button>
+  </form>
+</section>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classification History - Admin Panel</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 6px;
+            cursor: pointer;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">⚙️</div>
+                <h1 class="sidebar-title">Admin</h1>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="admin_panel.html" title="Dashboard">
+                        <span style="font-size: 20px;">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_users.html" title="Manage Users">
+                        <span style="font-size: 20px;">👥</span>
+                        <span>Manage Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_history.html" class="active" title="Classification History">
+                        <span style="font-size: 20px;">📁</span>
+                        <span>History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin_feedback.html" title="User Feedback">
+                        <span style="font-size: 20px;">💬</span>
+                        <span>Feedback</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <button class="logout-btn" id="logoutBtn">
+                🚪 Logout
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">📁 Classification History</h1>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <!-- Filters -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by user email..." style="flex: 1; min-width: 200px;">
+                <select id="sortSelect" class="form-select" style="width: 200px;">
+                    <option value="latest">Latest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highest">Highest Confidence</option>
+                    <option value="lowest">Lowest Confidence</option>
+                </select>
+            </div>
+
+            <!-- History Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h2 class="table-title">All Predictions</h2>
+                    <div style="font-size: 12px; color: #cbd5e0;">
+                        Page <span id="currentPage">1</span> • Total: <span id="totalPredictions">0</span>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>User Email</th>
+                                <th>Predicted Label</th>
+                                <th>Confidence</th>
+                                <th>Date/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #cbd5e0; padding: 40px;">
+                                    <div class="spinner"></div>
+                                    Loading predictions...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" id="prevBtn" onclick="previousPage()">← Previous</button>
+                <span id="pageInfo" style="display: flex; align-items: center; color: #cbd5e0; font-weight: 600;"></span>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextPage()">Next →</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid" style="margin-top: 30px;">
+                <div class="stat-card gradient-1">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-label">Total Predictions</div>
+                    <div class="stat-value" id="totalPredictionsCount">0</div>
+                </div>
+
+                <div class="stat-card gradient-3">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-label">Avg Confidence</div>
+                    <div class="stat-value" id="avgConfidence">0%</div>
+                </div>
+
+                <div class="stat-card gradient-2">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-label">Most Used Label</div>
+                    <div class="stat-value" id="topLabel" style="font-size: 18px;">-</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button class="close-btn" onclick="closeImageModal()">&times;</button>
+            </div>
+            <img id="previewImage" src="" alt="Preview" style="width: 100%; border-radius: 8px; max-height: 500px; object-fit: contain;">
+            <div style="margin-top: 15px; color: #cbd5e0;">
+                <p><strong>Label:</strong> <span id="previewLabel"></span></p>
+                <p><strong>Confidence:</strong> <span id="previewConfidence"></span></p>
+                <p><strong>User:</strong> <span id="previewUser"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPredictions = [];
+        let filteredPredictions = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            currentPage = 1;
+            applyFilters();
+        });
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', function(e) {
+            currentPage = 1;
+            applyFilters();
+        });
+
+        // Load history data
+        async function loadHistory() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/admin/history?limit=1000&offset=0', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.success && (data.history || data.data?.predictions)) {
+                    allPredictions = (data.history || data.data.predictions).map(pred => ({
+                        ...pred,
+                        confidence: parseFloat(pred.confidence) || 0
+                    }));
+                    filteredPredictions = [...allPredictions];
+                    displayPredictions();
+                    updateStats();
+                } else {
+                    showNoPredictions();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                showAlert('Error loading predictions', 'danger');
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy = document.getElementById('sortSelect').value;
+
+            // Filter
+            filteredPredictions = allPredictions.filter(pred => 
+                (pred.user_email && pred.user_email.toLowerCase().includes(searchTerm)) ||
+                (pred.label && pred.label.toLowerCase().includes(searchTerm))
+            );
+
+            // Sort
+            if (sortBy === 'latest') {
+                filteredPredictions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            } else if (sortBy === 'oldest') {
+                filteredPredictions.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            } else if (sortBy === 'highest') {
+                filteredPredictions.sort((a, b) => (parseFloat(b.confidence) || 0) - (parseFloat(a.confidence) || 0));
+            } else if (sortBy === 'lowest') {
+                filteredPredictions.sort((a, b) => (parseFloat(a.confidence) || 0) - (parseFloat(b.confidence) || 0));
+            }
+
+            currentPage = 1;
+            displayPredictions();
+        }
+
+        // Display predictions
+        function displayPredictions() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pagePredictions = filteredPredictions.slice(start, end);
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (pagePredictions.length === 0) {
+                showNoPredictions();
+                return;
+            }
+
+            pagePredictions.forEach((pred, index) => {
+                const date = new Date(pred.timestamp).toLocaleString();
+                const confidence = (parseFloat(pred.confidence) * 100).toFixed(2);
+                const row = document.createElement('tr');
+                const label = pred.label || 'N/A';
+                const email = pred.user_email || 'Unknown';
+
+                row.innerHTML = `
+                    <td>${start + index + 1}</td>
+                    <td>${escapeHtml(email)}</td>
+                    <td><strong>${escapeHtml(label)}</strong></td>
+                    <td>
+                        <span style="color: #48bb78; font-weight: 600;">${confidence}%</span>
+                    </td>
+                    <td style="font-size: 12px; color: #cbd5e0;">${date}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updatePagination();
+        }
+
+        // Show no predictions
+        function showNoPredictions() {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 60px 20px;">
+                        <div class="empty-icon">📁</div>
+                        <div class="empty-title">No Predictions Found</div>
+                        <div class="empty-message" style="color: #cbd5e0;">
+                            No predictions match your search criteria.
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalCount = allPredictions.length;
+            document.getElementById('totalPredictions').textContent = totalCount;
+
+            if (totalCount > 0) {
+                const avgConf = (allPredictions.reduce((sum, p) => sum + (parseFloat(p.confidence) || 0), 0) / totalCount * 100).toFixed(1);
+                document.getElementById('avgConfidence').textContent = avgConf + '%';
+
+                // Find most used label
+                const labelCounts = {};
+                allPredictions.forEach(p => {
+                    const label = p.label || 'N/A';
+                    labelCounts[label] = (labelCounts[label] || 0) + 1;
+                });
+                const topLabel = Object.keys(labelCounts).reduce((a, b) => 
+                    labelCounts[a] > labelCounts[b] ? a : b
+                );
+                document.getElementById('topLabel').textContent = topLabel;
+            }
+        }
+
+        // Pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredPredictions.length / itemsPerPage);
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredPredictions.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayPredictions();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayPredictions();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Image preview
+        function showImagePreview(imagePath, label, confidence, email) {
+            document.getElementById('previewImage').src = imagePath;
+            document.getElementById('previewLabel').textContent = label;
+            document.getElementById('previewConfidence').textContent = (confidence * 100).toFixed(2) + '%';
+            document.getElementById('previewUser').textContent = email;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Alert functionality
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `<strong>${type === 'success' ? '✓' : '✕'} ${message}</strong>`;
+            alertDiv.style.display = 'flex';
+
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load on page load
+        window.addEventListener('load', function() {
+            const isAdmin = sessionStorage.getItem('is_admin');
+            if (isAdmin !== 'true') {
+                window.location.href = 'login.html';
+            }
+            loadHistory();
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        });
+    </script>
+</body>
+</html>

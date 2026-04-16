@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<html lang="en">
+  <title>Zero-Shot Image Classifier - AI-Powered Intelligence</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      animation: slideInDown 0.8s ease-out;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+      animation: slideInUp 0.8s ease-out 0.2s both;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: var(--gradient-1);
+      color: white;
+      padding: 16px 40px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-lg);
+      border: none;
+      cursor: pointer;
+      animation: slideInUp 0.8s ease-out 0.4s both;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(123, 58, 237, 0.4);
+    }
+
+    .cta-button:active {
+      transform: translateY(-2px);
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 50px 0;
+      animation: slideInUp 0.8s ease-out 0.6s both;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      border-top: 4px solid var(--primary-color);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:nth-child(2) {
+      border-top-color: var(--secondary-color);
+    }
+
+    .stat-card:nth-child(3) {
+      border-top-color: var(--accent-color);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 900;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">⚡ZeroShot AI</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="upload.html">Upload</a></li>
+      <li><a href="detection.html">Object Detection</a></li>
+      <li><a href="Ask.html">Ask AI</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="#" onclick="handleLogout(event)">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero-section">
+    <div class="main-content">
+      <div class="hero">
+        <h1 class="gradient-text">🧠 AI-Powered Image Intelligence</h1>
+        <p class="hero-subtitle">
+          Classify images instantly with cutting-edge CLIP technology. No training needed. Infinite possibilities.
+        </p>
+        <button class="cta-button" onclick="window.location.href='upload.html'">
+          🚀 Start Classifying Now
+        </button>
+      </div>
+
+      <!-- Stats Section -->
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">85%</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">⚡ 2s</div>
+          <div class="stat-label">Processing Time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- About Project Section -->
+    <section style="margin: 80px 20px;">
+      <h2 style="text-align: center; font-size: 36px; margin-bottom: 50px;">
+        <span class="gradient-text">📖 About Zero-Shot Classifier</span>
+      </h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-bottom: 60px;">
+        <div>
+          <h3 style="font-size: 24px; color: var(--text-primary); margin-bottom: 20px;">🚀 What Makes It Special?</h3>
+          <p style="color: var(--text-secondary); font-size: 16px; line-height: 1.8; margin-bottom: 15px;">
+            Our Zero-Shot Image Classifier is powered by <strong>CLIP</strong>, a cutting-edge vision-language model that understands images without requiring any training data. Simply describe what you want to classify, and the AI does the rest!
+          </p>
+          <p style="color: var(--text-secondary); font-size: 16px; line-height: 1.8; margin-bottom: 15px;">
+            Unlike traditional ML models, this intelligent system can classify <strong>any category</strong> you imagine - no retraining needed. It's perfect for researchers, developers, and enterprises.
+          </p>
+          <p style="color: var(--text-secondary); font-size: 16px; line-height: 1.8;">
+            Built with <strong>Flask</strong> backend and <strong>modern web technologies</strong>, it provides a seamless, responsive experience on all devices.
+          </p>
+        </div>
+        <div style="background: linear-gradient(135deg, rgba(123, 58, 237, 0.1), rgba(219, 39, 119, 0.1)); padding: 40px; border-radius: 16px; border: 2px solid var(--border-color);">
+          <h3 style="font-size: 20px; color: var(--primary-color); margin-bottom: 20px;">⚡ Key Capabilities</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="padding: 12px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-color);">
+              ✓ <strong>100+Classification Labels</strong> - Classify almost anything
+            </li>
+            <li style="padding: 12px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-color);">
+              ✓ <strong>99% Accuracy</strong> - State-of-the-art CLIP model
+            </li>
+            <li style="padding: 12px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-color);">
+              ✓ <strong>2-Second Processing</strong> - Lightning-fast results
+            </li>
+            <li style="padding: 12px 0; color: var(--text-primary); border-bottom: 1px solid var(--border-color);">
+              ✓ <strong>No Training Required</strong> - Zero-shot magic!
+            </li>
+            <!-- Removed Compare feature -->
+                <!-- Object Detection Module Section -->
+                <section style="margin: 80px 20px;">
+                  <div style="background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%); border-radius: 18px; box-shadow: 0 8px 32px rgba(123,58,237,0.12); padding: 48px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 40px;">
+                    <div style="flex: 1 1 350px; min-width: 320px;">
+                      <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 18px; font-weight: 800; letter-spacing: 1px;">
+                        <span style="background: linear-gradient(90deg, #fff 60%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">🖼️ Object Detection</span>
+                      </h2>
+                      <p style="color: #f3f4f6; font-size: 1.1rem; margin-bottom: 22px;">
+                        Detect and highlight objects in your images with AI-powered bounding boxes and instant descriptions. Try our interactive demo!
+                      </p>
+                      <button class="cta-button" style="background: #fff; color: #7c3aed; font-weight: 700; font-size: 1.1rem; margin-top: 10px;" onclick="window.location.href='detection.html'">
+                        Try Object Detection →
+                      </button>
+                    </div>
+                    <div style="flex: 1 1 350px; min-width: 320px; display: flex; align-items: center; justify-content: center;">
+                      <img src="sampleimage/detection.jpeg" alt="Object Detection Demo" style="max-width: 340px; width: 100%; border-radius: 16px; box-shadow: 0 4px 24px rgba(123,58,237,0.18); border: 4px solid #fff;">
+                    </div>
+                  </div>
+                </section>
+            <li style="padding: 12px 0; color: var(--text-primary);">
+              ✓ <strong>Ask AI Feature</strong> - Get explanations from AI
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Technology Stack -->
+      <div style="background: linear-gradient(135deg, rgba(5, 150, 105, 0.08), rgba(8, 145, 178, 0.08)); padding: 40px; border-radius: 16px; border-left: 4px solid var(--success-color); margin-bottom: 60px;">
+        <h3 style="font-size: 24px; color: var(--success-color); margin-bottom: 25px;">🛠️ Technology Stack</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px;">
+          <div>
+            <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 12px;">🧠 AI & ML</h4>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+              CLIP Vision-Language Model, PyTorch, Transformers, Pillow
+            </p>
+          </div>
+          <div>
+            <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 12px;">⚙️ Backend</h4>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+              Flask 2.3.0, Flask-CORS, PyJWT, MySQL 8.0.33
+            </p>
+          </div>
+          <div>
+            <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 12px;">🎨 Frontend</h4>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+              HTML5, CSS3 (Gradients, Animations), Vanilla JavaScript
+            </p>
+          </div>
+          <div>
+            <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 12px;">📊 Database</h4>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+              MySQL with Connection Pooling, Schema Management
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works - Enhanced -->
+      <h2 style="text-align: center; font-size: 36px; margin-bottom: 50px;">
+        <span class="gradient-text"> How Zero-Shot Classification Works</span>
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 60px;">
+        <div style="background: white; padding: 30px; border-radius: 16px; border: 2px solid var(--border-color); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gradient-1);"></div>
+          <div style="font-size: 48px; margin-bottom: 20px;">📸</div>
+          <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 10px;">Step 1: Upload Image</h4>
+          <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+            Choose any image from your device - JPG, PNG, or WebP format supported.
+          </p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 16px; border: 2px solid var(--border-color); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gradient-2);"></div>
+          <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+          <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 10px;">Step 2: AI Analyzes</h4>
+          <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+            CLIP model instantly processes the image using advanced vision-language understanding.
+          </p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 16px; border: 2px solid var(--border-color); position: relative; overflow: hidden;">
+          <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gradient-3);"></div>
+          <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+          <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 10px;">Step 3: Get Results</h4>
+          <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+            Receive instant classification with confidence scores in seconds.
+          </p>
+        </div>
+      </div>
+
+      <!-- Why Choose Us -->
+      <div style="background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(234, 88, 12, 0.08)); padding: 40px; border-radius: 16px; border-left: 4px solid var(--danger-color);">
+        <h3 style="font-size: 24px; color: var(--danger-color); margin-bottom: 20px;">🎯 Why Choose Our System?</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+          <div>
+            <p style="color: var(--text-primary); margin: 0; margin-bottom: 12px;"><strong>🚀 No Training Needed</strong></p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+              Traditional ML requires hundreds of labeled samples. We use zero-shot learning to classify instantly without retraining.
+            </p>
+          </div>
+          <div>
+            <p style="color: var(--text-primary); margin: 0; margin-bottom: 12px;"><strong>⚡ Lightning Fast</strong></p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+              Get results in milliseconds. Process hundreds of images with minimal latency and maximum efficiency.
+            </p>
+          </div>
+          <div>
+            <p style="color: var(--text-primary); margin: 0; margin-bottom: 12px;"><strong>🌐 Flexible Categories</strong></p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+              Define any classification labels you want. Perfect for unique domains and specialized use cases.
+            </p>
+          </div>
+          <div>
+            <p style="color: var(--text-primary); margin: 0; margin-bottom: 12px;"><strong>🔒 Privacy First</strong></p>
+            <p style="color: var(--text-secondary); font-size: 14px; margin: 0; line-height: 1.6;">
+              Your images are processed securely. We respect your privacy with no external data sharing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vibrant Banner Section -->
+    <div class="vibrant-banner">
+      <h2>🚀 Ready to Experience AI Magic?</h2>
+      <p style="font-size: 16px; margin: 15px 0 25px;">
+        Join thousands of users classifying images with state-of-the-art AI
+      </p>
+      <button class="cta-button" onclick="window.location.href='upload.html'" 
+              style="background: white; color: #7c3aed; font-weight: 700;">
+        Start Now - It's Free! →
+      </button>
+    </div>
+
+    <!-- Info Highlights -->
+    <section style="margin: 80px 20px;">
+      <div class="info-highlight">
+        <strong>🎯 Why Choose Us?</strong><br>
+        Our zero-shot learning approach means you don't need to train models. Just upload and classify. 
+        Perfect for businesses, researchers, and enthusiasts.
+      </div>
+
+      <div class="info-highlight">
+        <strong>🔒 Privacy First</strong><br>
+        Your images are processed securely. We respect your privacy. No data is stored without consent.
+      </div>
+
+      <div class="info-highlight">
+        <strong>⚙️ Easy Integration</strong><br>
+        Built with modern web technologies. Works seamlessly on desktop and mobile devices.
+      </div>
+    </section>
+
+    <!-- Footer Info -->
+    <section style="text-align: center; padding: 60px 20px; border-top: 2px solid var(--border-color); margin-top: 80px;">
+      <h2 style="margin-bottom: 15px;">🌟 Experience the Future of AI</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 16px;">
+        Zero-Shot Image Classifier powered by CLIP | Built with modern web technologies
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 30px 0;">
+        <div>
+          <strong style="color: var(--primary-color);">400+</strong>
+          <p style="color: var(--text-secondary); font-size: 14px;">Classification Labels</p>
+        </div>
+        <div>
+          <strong style="color: var(--secondary-color);">85%</strong>
+          <p style="color: var(--text-secondary); font-size: 14px;">Accuracy Rate</p>
+        </div>
+        <div>
+          <strong style="color: var(--accent-color);">∞</strong>
+          <p style="color: var(--text-secondary); font-size: 14px;">Possibilities</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function handleLogout(event) {
+      event.preventDefault();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    // Check if user is logged in
+    const userId = sessionStorage.getItem("user_id");
+    if (!userId) {
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

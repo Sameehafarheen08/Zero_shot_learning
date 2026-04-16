@@ -1,0 +1,17 @@
+<nav class="navbar">
+  <div class="nav-logo">⚡ZeroShot AI</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="upload.html">Upload</a></li>
+    <li><a href="detection.html">Object Detection</a></li>
+    <li><a href="Ask.html">Ask AI</a></li>
+    <li><a href="feedback.html">Feedback</a></li>
+    <li><a href="#" id="navLogout">Logout</a></li>
+  </ul>
+</nav>
+<script>
+  // attach logout handler
+  document.getElementById('navLogout')?.addEventListener('click', function(e){
+    e.preventDefault(); sessionStorage.clear(); window.location.href='login.html';
+  });
+</script>
